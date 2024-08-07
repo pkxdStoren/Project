@@ -1,4 +1,6 @@
-#include <ESP8266WiFi.h>
+// Remote Control Code (ESP32)
+
+#include <WiFi.h>
 #include <Wire.h>
 #include <Adafruit_SSD1306.h>
 
@@ -12,42 +14,40 @@ const char* password = "your_PASSWORD";
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
 
 // Joystick Pins
-const int joyX = A0;
-const int joyY = A1;
-const int buttonPin = 2;
+const int joystickX = A0;
+const int joystickY = A1;
+const int joystickButton = 2;
 
 void setup() {
-    // Initialize Serial Monitor
-    Serial.begin(9600);
-
-    // Initialize OLED Display
-    if(!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) { 
-        Serial.println(F("SSD1306 allocation failed"));
-        for(;;); // Don't proceed, loop forever
+    // Initialize Serial
+    Serial.begin(115200);
+    
+    // Initialize OLED
+    if (!display.begin(SSD1306_I2C_ADDRESS, 0x3C)) {
+        Serial.println("SSD1306 allocation failed");
+        for (;;);
     }
-    display.clearDisplay();
     display.display();
-
-    // Initialize Joystick
-    pinMode(buttonPin, INPUT_PULLUP);
-
-    // Connect to WiFi
+    delay(2000);
+    display.clearDisplay();
+    
+    // Initialize WiFi
     connectToWiFi();
 }
 
 void loop() {
-    // Read Joystick Values
-    int xValue = analogRead(joyX);
-    int yValue = analogRead(joyY);
-    int buttonState = digitalRead(buttonPin);
+    // Read joystick values
+    int xValue = analogRead(joystickX);
+    int yValue = analogRead(joystickY);
+    int buttonState = digitalRead(joystickButton);
 
-    // Send Joystick Values to Robot
+    // Send joystick values to the robot
     sendJoystickValues(xValue, yValue, buttonState);
 
-    // Receive Data from Robot
-    receiveRobotData();
+    // Request sensor data from the robot
+    String sensorData = requestSensorData();
+    displaySensorData(sensorData);
 
-    // Add delay for stability
     delay(100);
 }
 
@@ -61,80 +61,35 @@ void connectToWiFi() {
 }
 
 void sendJoystickValues(int x, int y, int button) {
-    if (WiFi.status() == WL_CONNECTED) {
-        WiFiClient client;
-        const char* host = "robot_ip_address";  // Replace with robot's IP address
-        const int httpPort = 80;
-
-        if (!client.connect(host, httpPort)) {
-            Serial.println("Connection to robot failed");
-            return;
-        }
-
+    WiFiClient client;
+    if (client.connect("robot_ip_address", 80)) {
         String url = "/control?x=" + String(x) + "&y=" + String(y) + "&button=" + String(button);
-
         client.print(String("GET ") + url + " HTTP/1.1\r\n" +
-                     "Host: " + host + "\r\n" +
+                     "Host: robot_ip_address\r\n" +
                      "Connection: close\r\n\r\n");
-        delay(10);
-
-        // Ensure the client is connected before reading response
-        while (client.connected()) {
-            String line = client.readStringUntil('\n');
-            if (line == "\r") {
-                break;
-            }
-        }
-
-        // Check if there are any available bytes to read
-        if (client.available()) {
-            String line = client.readStringUntil('\n');
-            Serial.println(line);
-        }
-
         client.stop();
     }
 }
 
-void receiveRobotData() {
-    if (WiFi.status() == WL_CONNECTED) {
-        WiFiClient client;
-        const char* host = "robot_ip_address";  // Replace with robot's IP address
-        const int httpPort = 80;
-
-        if (!client.connect(host, httpPort)) {
-            Serial.println("Connection to robot failed");
-            return;
-        }
-
+String requestSensorData() {
+    WiFiClient client;
+    if (client.connect("robot_ip_address", 80)) {
         client.print(String("GET /data HTTP/1.1\r\n") +
-                     "Host: " + host + "\r\n" +
+                     "Host: robot_ip_address\r\n" +
                      "Connection: close\r\n\r\n");
-        delay(10);
-
-        // Ensure the client is connected before reading response
-        while (client.connected()) {
-            String line = client.readStringUntil('\n');
-            if (line == "\r") {
-                break;
-            }
-        }
-
-        String data = "";
-        while (client.available()) {
-            data += client.readStringUntil('\n');
-        }
-        displayData(data);
-
+        String line = client.readStringUntil('\n');
         client.stop();
+        return line;
     }
+    return "";
 }
 
-void displayData(String data) {
+void displaySensorData(String data) {
     display.clearDisplay();
     display.setTextSize(1);
     display.setTextColor(SSD1306_WHITE);
     display.setCursor(0, 0);
+    display.println("Sensor Data:");
     display.println(data);
     display.display();
 }
