@@ -10,6 +10,7 @@ Hi! This is **Aryan Singh**, the owner of this repository. This is a project mad
 
 **Arduino Nano Connections**
 |COMPONENT	          |  PIN ON ARDUINO NANO	|PIN ON COMPONENT|
+|---------------------|-----------------------|----------------|
 |SERVO 1, JOINT 1	    |  D11	                |Signal          |
 |SERVO 1, JOINT 2	    |  D12	                |Signal          |
 |SERVO 1, JOINT 3	    |  D13	                |Signal          |
