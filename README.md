@@ -33,18 +33,20 @@ Hi! This is **Aryan Singh**, the owner of this repository. This is a project mad
 |ESP32 RX	            |  TX (GPIO1)	          |Arduino Nano TX |
 |ESP32 TX	            |  RX (GPIO3)	          |Arduino Nano RX |
 
-ESP32 Connections (on Robot)
-COMPONENT	PIN ON ESP32	PIN ON COMPONENT
-ARDUINO NANO TX	RX2 (GPIO16)	TX
-ARDUINO NANO RX	TX2 (GPIO17)	RX
-WIFI	-	-
+**ESP32 Connections (on Robot)**
+|COMPONENT	      |PIN ON ESP32	|PIN ON COMPONENT|
+|-----------------|-------------|----------------|
+|ARDUINO NANO TX	|RX2 (GPIO16)	|TX              |
+|ARDUINO NANO RX	|TX2 (GPIO17)	|RX              |
+|WIFI	            |-            |-               |
 
-Remote Control (ESP32)
-COMPONENT	PIN ON ESP32	PIN ON COMPONENT
-JOYSTICK X-AXIS	A0	Signal
-JOYSTICK Y-AXIS	A1	Signal
-JOYSTICK BUTTON	GPIO2	Signal
-OLED DISPLAY SDA	GPIO21	SDA
-OLED DISPLAY SCL	GPIO22	SCL
+**Remote Control (ESP32)**
+|COMPONENT	      |PIN ON ESP32	  |PIN ON COMPONENT|
+|-----------------|---------------|----------------|
+|JOYSTICK X-AXIS	|A0	            |Signal          |
+|JOYSTICK Y-AXIS	|A1	            |Signal          |
+|JOYSTICK BUTTON	|GPIO2	        |Signal          |
+|OLED DISPLAY     |SDA	GPIO21	  |SDA             |
+|OLED DISPLAY     |SCL	GPIO22	  |SCL             |
 
 
