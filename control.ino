@@ -1,4 +1,4 @@
-// Remote Control Code (ESP32)
+// ESP32 code for remote control
 
 #include <WiFi.h>
 #include <Wire.h>
@@ -17,6 +17,9 @@ Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
 const int joystickX = A0;
 const int joystickY = A1;
 const int joystickButton = 2;
+
+// Robot IP Address
+const char* robot_ip = "robot_ip_address"; // Replace with your robot's IP address
 
 void setup() {
     // Initialize Serial
@@ -62,10 +65,10 @@ void connectToWiFi() {
 
 void sendJoystickValues(int x, int y, int button) {
     WiFiClient client;
-    if (client.connect("robot_ip_address", 80)) {
+    if (client.connect(robot_ip, 80)) {
         String url = "/control?x=" + String(x) + "&y=" + String(y) + "&button=" + String(button);
         client.print(String("GET ") + url + " HTTP/1.1\r\n" +
-                     "Host: robot_ip_address\r\n" +
+                     "Host: " + robot_ip + "\r\n" +
                      "Connection: close\r\n\r\n");
         client.stop();
     }
@@ -73,13 +76,13 @@ void sendJoystickValues(int x, int y, int button) {
 
 String requestSensorData() {
     WiFiClient client;
-    if (client.connect("robot_ip_address", 80)) {
+    if (client.connect(robot_ip, 80)) {
         client.print(String("GET /data HTTP/1.1\r\n") +
-                     "Host: robot_ip_address\r\n" +
+                     "Host: " + robot_ip + "\r\n" +
                      "Connection: close\r\n\r\n");
-        String line = client.readStringUntil('\n');
+        String data = client.readStringUntil('\n');
         client.stop();
-        return line;
+        return data;
     }
     return "";
 }
@@ -89,7 +92,30 @@ void displaySensorData(String data) {
     display.setTextSize(1);
     display.setTextColor(SSD1306_WHITE);
     display.setCursor(0, 0);
+    
+    // Split the data received
+    int index1 = data.indexOf(',');
+    int index2 = data.indexOf(',', index1 + 1);
+    int index3 = data.indexOf(',', index2 + 1);
+    int index4 = data.indexOf(',', index3 + 1);
+    
+    String flame = data.substring(0, index1);
+    String distance = data.substring(index1 + 1, index2);
+    String smoke = data.substring(index2 + 1, index3);
+    String temperature = data.substring(index3 + 1, index4);
+    String mic = data.substring(index4 + 1);
+    
+    // Display formatted data
     display.println("Sensor Data:");
-    display.println(data);
+    display.print("Flame: ");
+    display.println(flame);
+    display.print("Distance: ");
+    display.println(distance);
+    display.print("Smoke: ");
+    display.println(smoke);
+    display.print("Temp: ");
+    display.println(temperature);
+    display.print("Mic: ");
+    display.println(mic);
     display.display();
 }
