@@ -8,29 +8,29 @@ Hi! This is **Aryan Singh**, the owner of this repository. This is a project mad
 
 # THESE ARE THE CONNECTIONS OF THE MACHINE (WHICH MAY CHANGE)
 
-Arduino Nano Connections
-COMPONENT	          |  PIN ON ARDUINO NANO	PIN ON COMPONENT
-SERVO 1, JOINT 1	  |  D11	Signal
-SERVO 1, JOINT 2	  |  D12	Signal
-SERVO 1, JOINT 3	  |  D13	Signal
-SERVO 2, JOINT 1	  |  D2	Signal
-SERVO 2, JOINT 2	  |  D4	Signal
-SERVO 2, JOINT 3	  |  D7	Signal
-SERVO 3, JOINT 1	  |  D14	Signal
-SERVO 3, JOINT 2	  |  D15	Signal
-SERVO 3, JOINT 3	  |  D16	Signal
-SERVO 4, JOINT 1	  |  D8	Signal
-SERVO 4, JOINT 2	  |  D9	Signal
-SERVO 4, JOINT 3	  |  D10	Signal
-FLAME SENSOR	      |  A0	Signal
-ULTRASONIC TRIG	    |  D5	Trig
-ULTRASONIC ECHO	    |  D6	Echo
-SMOKE SENSOR	      |  A1	Signal
-TEMPERATURE SENSOR  |	 A2	Signal
-BME280 SDA	A4	SDA
-BME280 SCL	A5	SCL
-ESP32 RX	TX (GPIO1)	Arduino Nano TX
-ESP32 TX	RX (GPIO3)	Arduino Nano RX
+**Arduino Nano Connections**
+|COMPONENT	          |  PIN ON ARDUINO NANO	|PIN ON COMPONENT|
+|SERVO 1, JOINT 1	    |  D11	                |Signal          |
+|SERVO 1, JOINT 2	    |  D12	                |Signal          |
+|SERVO 1, JOINT 3	    |  D13	                |Signal          |
+|SERVO 2, JOINT 1	    |  D2	                  |Signal          |
+|SERVO 2, JOINT 2	    |  D4	                  |Signal          |
+|SERVO 2, JOINT 3	    |  D7	                  |Signal          |
+|SERVO 3, JOINT 1	    |  D14	                |Signal          |
+|SERVO 3, JOINT 2	    |  D15	                |Signal          |
+|SERVO 3, JOINT 3	    |  D16	                |Signal          |
+|SERVO 4, JOINT 1	    |  D8	                  |Signal          |
+|SERVO 4, JOINT 2	    |  D9	                  |Signal          |
+|SERVO 4, JOINT 3	    |  D10	                |Signal          |
+|FLAME SENSOR	        |  A0	                  |Signal          |
+|ULTRASONIC TRIG	    |  D5	                  |Trig            |
+|ULTRASONIC ECHO	    |  D6	                  |Echo            |
+|SMOKE SENSOR	        |  A1	                  |Signal          |
+|TEMPERATURE SENSOR   |	 A2	                  |Signal          |
+|BME280 SDA	          |  A4	                  |SDA             |
+|BME280 SCL	          |  A5	                  |SCL             |
+|ESP32 RX	            |  TX (GPIO1)	          |Arduino Nano TX |
+|ESP32 TX	            |  RX (GPIO3)	          |Arduino Nano RX |
 
 ESP32 Connections (on Robot)
 COMPONENT	PIN ON ESP32	PIN ON COMPONENT
@@ -45,4 +45,5 @@ JOYSTICK Y-AXIS	A1	Signal
 JOYSTICK BUTTON	GPIO2	Signal
 OLED DISPLAY SDA	GPIO21	SDA
 OLED DISPLAY SCL	GPIO22	SCL
+
 
