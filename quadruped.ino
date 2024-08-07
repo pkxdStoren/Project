@@ -1,129 +1,54 @@
-#include <FlexiTimer2.h>
-#include <Wire.h>
-#include <Adafruit_Sensor.h>
-#include <Adafruit_BME280.h>
 #include <ESP8266WiFi.h>
-#include <Servo.h>
-
-// Servo Constants
-Servo servo[4][3];
-const int servo_pin[4][3] = {
-    {11, 12, 13},
-    {2, 4, 7},
-    {14, 15, 16},
-    {8, 9, 10}
-};
-
-const float length_a = 50;
-const float length_b = 77.1;
-const float length_c = 27.5;
-const float length_side = 71;
-const float z_absolute = -28;
-
-const float z_default = -50, z_up = -30;
-const int threshold = 500; // Threshold value for flame detection
-
-// Sensor Pins
-const int flameSensorPin = A0;
-const int trigPin = 5;
-const int echoPin = 6;
-const int smokeSensorPin = A1;
-const int tempSensorPin = A2;
-const int micPin = A3;
+#include <Wire.h>
+#include <Adafruit_SSD1306.h>
 
 // WiFi Constants
 const char* ssid = "your_SSID";
 const char* password = "your_PASSWORD";
 
-// BME280 Sensor
-Adafruit_BME280 bme;
+// OLED Display
+#define SCREEN_WIDTH 128
+#define SCREEN_HEIGHT 64
+Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
+
+// Joystick Pins
+const int joyX = A0;
+const int joyY = A1;
+const int buttonPin = 2;
 
 void setup() {
-    // Attach servos
-    for (int i = 0; i < 4; i++) {
-        for (int j = 0; j < 3; j++) {
-            servo[i][j].attach(servo_pin[i][j]);
-        }
-    }
-    initializePosition();
-    
     // Initialize Serial Monitor
     Serial.begin(9600);
     
-    // Initialize Sensors
-    pinMode(flameSensorPin, INPUT);
-    pinMode(trigPin, OUTPUT);
-    pinMode(echoPin, INPUT);
-    pinMode(smokeSensorPin, INPUT);
-    pinMode(tempSensorPin, INPUT);
-    pinMode(micPin, INPUT);
-
-    // Initialize BME280
-    if (!bme.begin(0x76)) {
-        Serial.println("Could not find a valid BME280 sensor, check wiring!");
+    // Initialize OLED Display
+    if(!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) { 
+        Serial.println(F("SSD1306 allocation failed"));
+        for(;;);
     }
+    display.clearDisplay();
+    display.display();
+    
+    // Initialize Joystick
+    pinMode(buttonPin, INPUT_PULLUP);
     
     // Connect to WiFi
     connectToWiFi();
 }
 
 void loop() {
-    // Read sensor values
-    int flameValue = analogRead(flameSensorPin);
-    long distance = measureDistance();
-    int smokeValue = analogRead(smokeSensorPin);
-    float temperature = bme.readTemperature();
-    int micValue = analogRead(micPin);
+    // Read Joystick Values
+    int xValue = analogRead(joyX);
+    int yValue = analogRead(joyY);
+    int buttonState = digitalRead(buttonPin);
     
-    // Log sensor values
-    logSensorValues(flameValue, distance, smokeValue, temperature, micValue);
+    // Send Joystick Values to Robot
+    sendJoystickValues(xValue, yValue, buttonState);
     
-    // Transmit data via ESP8266
-    transmitData(flameValue, distance, smokeValue, temperature, micValue);
+    // Receive Data from Robot
+    receiveRobotData();
     
-    // Add any movement logic here
-}
-
-void initializePosition() {
-    for (int i = 0; i < 4; i++) {
-        moveLeg(i, z_default);
-    }
-}
-
-void moveLeg(int leg, float z_position) {
-    for (int j = 0; j < 3; j++) {
-        servo[leg][j].writeMicroseconds(z_position);
-    }
-}
-
-void transmitData(int flame, long distance, int smoke, float temperature, int mic) {
-    // Transmit data via ESP8266
-    if (WiFi.status() == WL_CONNECTED) {
-        WiFiClient client;
-        const char* host = "your_server_host";
-        const int httpPort = 80;
-        
-        if (!client.connect(host, httpPort)) {
-            Serial.println("Connection failed");
-            return;
-        }
-
-        String url = "/update?flame=" + String(flame) +
-                     "&distance=" + String(distance) +
-                     "&smoke=" + String(smoke) +
-                     "&temperature=" + String(temperature) +
-                     "&mic=" + String(mic);
-        
-        client.print(String("GET ") + url + " HTTP/1.1\r\n" +
-                     "Host: " + host + "\r\n" +
-                     "Connection: close\r\n\r\n");
-        delay(10);
-        
-        while (client.available()) {
-            String line = client.readStringUntil('\r');
-            Serial.print(line);
-        }
-    }
+    // Add delay for stability
+    delay(100);
 }
 
 void connectToWiFi() {
@@ -135,32 +60,55 @@ void connectToWiFi() {
     Serial.println("Connected to WiFi");
 }
 
-long measureDistance() {
-    long duration;
-    digitalWrite(trigPin, LOW);
-    delayMicroseconds(2);
-    digitalWrite(trigPin, HIGH);
-    delayMicroseconds(10);
-    digitalWrite(trigPin, LOW);
-    duration = pulseIn(echoPin, HIGH);
-    return (duration / 2) / 29.1;
+void sendJoystickValues(int x, int y, int button) {
+    if (WiFi.status() == WL_CONNECTED) {
+        WiFiClient client;
+        const char* host = "robot_ip_address";  // Replace with robot's IP address
+        const int httpPort = 80;
+        
+        if (!client.connect(host, httpPort)) {
+            Serial.println("Connection failed");
+            return;
+        }
+
+        String url = "/control?x=" + String(x) + "&y=" + String(y) + "&button=" + String(button);
+        
+        client.print(String("GET ") + url + " HTTP/1.1\r\n" +
+                     "Host: " + host + "\r\n" +
+                     "Connection: close\r\n\r\n");
+        delay(10);
+    }
 }
 
-void logSensorValues(int flame, long distance, int smoke, float temperature, int mic) {
-    if (flame > threshold) {
-        Serial.println("Flame detected!");
+void receiveRobotData() {
+    if (WiFi.status() == WL_CONNECTED) {
+        WiFiClient client;
+        const char* host = "robot_ip_address";  // Replace with robot's IP address
+        const int httpPort = 80;
+        
+        if (!client.connect(host, httpPort)) {
+            Serial.println("Connection failed");
+            return;
+        }
+
+        client.print(String("GET /data HTTP/1.1\r\n") +
+                     "Host: " + host + "\r\n" +
+                     "Connection: close\r\n\r\n");
+        delay(10);
+        
+        String data = "";
+        while (client.available()) {
+            data += client.readStringUntil('\r');
+        }
+        displayData(data);
     }
-    
-    if (distance < 10) {
-        Serial.println("Obstacle detected!");
-    }
-    
-    Serial.print("Smoke Level: ");
-    Serial.println(smoke);
-    
-    Serial.print("Temperature: ");
-    Serial.println(temperature);
-    
-    Serial.print("Mic Value: ");
-    Serial.println(mic);
+}
+
+void displayData(String data) {
+    display.clearDisplay();
+    display.setTextSize(1);
+    display.setTextColor(SSD1306_WHITE);
+    display.setCursor(0, 0);
+    display.println(data);
+    display.display();
 }
