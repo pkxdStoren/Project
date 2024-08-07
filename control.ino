@@ -19,18 +19,18 @@ const int buttonPin = 2;
 void setup() {
     // Initialize Serial Monitor
     Serial.begin(9600);
-    
+
     // Initialize OLED Display
     if(!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) { 
         Serial.println(F("SSD1306 allocation failed"));
-        for(;;);
+        for(;;); // Don't proceed, loop forever
     }
     display.clearDisplay();
     display.display();
-    
+
     // Initialize Joystick
     pinMode(buttonPin, INPUT_PULLUP);
-    
+
     // Connect to WiFi
     connectToWiFi();
 }
@@ -40,13 +40,13 @@ void loop() {
     int xValue = analogRead(joyX);
     int yValue = analogRead(joyY);
     int buttonState = digitalRead(buttonPin);
-    
+
     // Send Joystick Values to Robot
     sendJoystickValues(xValue, yValue, buttonState);
-    
+
     // Receive Data from Robot
     receiveRobotData();
-    
+
     // Add delay for stability
     delay(100);
 }
@@ -65,18 +65,34 @@ void sendJoystickValues(int x, int y, int button) {
         WiFiClient client;
         const char* host = "robot_ip_address";  // Replace with robot's IP address
         const int httpPort = 80;
-        
+
         if (!client.connect(host, httpPort)) {
-            Serial.println("Connection failed");
+            Serial.println("Connection to robot failed");
             return;
         }
 
         String url = "/control?x=" + String(x) + "&y=" + String(y) + "&button=" + String(button);
-        
+
         client.print(String("GET ") + url + " HTTP/1.1\r\n" +
                      "Host: " + host + "\r\n" +
                      "Connection: close\r\n\r\n");
         delay(10);
+
+        // Ensure the client is connected before reading response
+        while (client.connected()) {
+            String line = client.readStringUntil('\n');
+            if (line == "\r") {
+                break;
+            }
+        }
+
+        // Check if there are any available bytes to read
+        if (client.available()) {
+            String line = client.readStringUntil('\n');
+            Serial.println(line);
+        }
+
+        client.stop();
     }
 }
 
@@ -85,9 +101,9 @@ void receiveRobotData() {
         WiFiClient client;
         const char* host = "robot_ip_address";  // Replace with robot's IP address
         const int httpPort = 80;
-        
+
         if (!client.connect(host, httpPort)) {
-            Serial.println("Connection failed");
+            Serial.println("Connection to robot failed");
             return;
         }
 
@@ -95,12 +111,22 @@ void receiveRobotData() {
                      "Host: " + host + "\r\n" +
                      "Connection: close\r\n\r\n");
         delay(10);
-        
+
+        // Ensure the client is connected before reading response
+        while (client.connected()) {
+            String line = client.readStringUntil('\n');
+            if (line == "\r") {
+                break;
+            }
+        }
+
         String data = "";
         while (client.available()) {
-            data += client.readStringUntil('\r');
+            data += client.readStringUntil('\n');
         }
         displayData(data);
+
+        client.stop();
     }
 }
 
